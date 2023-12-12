@@ -194,6 +194,7 @@ target_include_directories(snmalloc
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
 
 if(NOT MSVC)
+  add_link_options("-lc++abi")
   find_package(Threads REQUIRED COMPONENTS snmalloc)
   target_link_libraries(snmalloc INTERFACE
     ${CMAKE_THREAD_LIBS_INIT} $<$<CXX_COMPILER_ID:GNU>:atomic>)
