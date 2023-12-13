@@ -2,7 +2,7 @@
 
 #include "empty_range.h"
 #include "range_helpers.h"
-
+#include "../aal/aal.h"
 #include <atomic>
 
 namespace snmalloc
@@ -36,6 +36,7 @@ namespace snmalloc
         {
           auto prev = current_usage.fetch_add(size);
           auto curr = peak_usage.load();
+          char times = 0;
           while (curr < prev + size)
           {
             if (peak_usage.compare_exchange_weak(curr, prev + size))

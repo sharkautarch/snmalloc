@@ -29,9 +29,10 @@ class sfc64 {
     }
 
     uint64_t operator()() noexcept {
-    	auto tmp01 = m_counter.load(std::memory_order_relaxed) + (uint64_t)std::clamp( ((static_cast<int64_t>(( (snmalloc::Aal::tick() - snmalloc::DefaultPal::get_tid())/4 )) - 4096)%16), 0l, 2l);
-    	auto tmp0 = m_counter.load(std::memory_order_release)+1;
-    	m_counter.store(tmp0, std::memory_order_consume);
+    	auto tmp00 = m_counter.load(std::memory_order_consume);
+    	auto tmp01 = tmp00 + (uint64_t)std::clamp( ((static_cast<int64_t>(( (snmalloc::Aal::tick() - snmalloc::DefaultPal::get_tid())/4 )) - 4096)%16), 1l, 2l);
+    	auto tmp0 = tmp00+1;
+    	m_counter.store(tmp0, std::memory_order_release);
     	
         auto const tmp = m_a + m_b + tmp01;
         m_a = m_b ^ (m_b >> right_shift);

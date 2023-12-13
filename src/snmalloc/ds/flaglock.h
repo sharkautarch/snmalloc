@@ -106,12 +106,11 @@ namespace snmalloc
 #else
   using FlagWord = DebugFlagWord;
 #endif
-
+ 
   class FlagLock
   {
   private:
     FlagWord& lock;
-    
     static inline bool coinFlip() //lock-free, (hopefully) threadsafe psuedorandom true or false
     {
     	static const uint64_t init_seed = Aal::tick();
@@ -123,11 +122,10 @@ namespace snmalloc
   public:
     FlagLock(FlagWord& lock) : lock(lock)
     {
-      if (try_lock()) {
-      	lock.set_owner();
-      	return;
-      }
-      else if (coinFlip()) { // attempt to reduce first-try-lock contention by giving each thread a random 50-50 chance (well not exactly random, but probably close enough) to pause after try_lock() fails
+
+      
+      if (lock.flag.load(std::memory_order_relaxed) && coinFlip()) { // attempt to reduce first-try-lock contention by giving each thread a random 50-50 chance (well not exactly random, but probably close enough) to pause after try_lock() fails
+      	lock.assert_not_owned_by_current_thread();
       	Aal::pause();
       }
       	
@@ -144,17 +142,12 @@ namespace snmalloc
         {
           Aal::pause();
         }
+
       }
+      
       lock.set_owner();
     }
     
-    //snippet from: https://rigtorp.se/spinlock/#appendix-complete-spinlock-implementation
-    bool try_lock() noexcept {
-    	// First do a relaxed load to check if lock is free in order to prevent
-    	// unnecessary cache misses if someone does while(!try_lock())
-    	return !lock.flag.load(std::memory_order_relaxed) &&
-           !lock.flag.exchange(true, std::memory_order_acquire);
-    }
 
     ~FlagLock()
     {
